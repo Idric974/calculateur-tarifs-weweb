@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calculateur de Tarifs WeWeb</title>
+    <style>
+      /* --- CSS pour le style --- */
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+      :root {
+        --primary-color: #4a6cfd;
+        --secondary-color: #1a2c4e;
+        --light-gray: #f4f7f6;
+        --medium-gray: #e0e0e0;
+        --dark-gray: #555;
+        --white: #fff;
+        --success-bg: #e6f7f0;
+        --success-border: #50c878;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--light-gray);
+        color: var(--dark-gray);
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+        margin: 0;
+      }
+
+      .calculator-container {
+        width: 100%;
+        max-width: 800px;
+        background: var(--white);
+        padding: 30px 40px;
+        border-radius: 16px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+      }
+
+      h1 {
+        text-align: center;
+        color: var(--secondary-color);
+        margin-bottom: 15px;
+      }
+
+      p.subtitle {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      /* --- Billing Toggle --- */
+      .billing-toggle {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 40px;
+        gap: 15px;
+      }
+      .billing-toggle span {
+        font-weight: 500;
+      }
+      .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+      }
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--primary-color);
+        transition: 0.4s;
+        border-radius: 34px;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: var(--white);
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+      input:checked + .slider:before {
+        transform: translateX(26px);
+      }
+
+      /* --- Step Styling --- */
+      .step {
+        margin-bottom: 30px;
+      }
+      .step-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .step-number {
+        background-color: var(--primary-color);
+        color: var(--white);
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+      }
+      .step h2 {
+        font-size: 1.3em;
+        color: var(--secondary-color);
+        margin: 0;
+      }
+
+      .options-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+      }
+
+      .option {
+        padding: 15px;
+        border-radius: 8px;
+        border: 2px solid var(--medium-gray);
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+      }
+      .option:hover {
+        border-color: var(--primary-color);
+      }
+      .option.selected {
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 15px rgba(74, 108, 253, 0.2);
+      }
+      .option input[type="radio"] {
+        display: none;
+      }
+      .option label {
+        display: block;
+        cursor: pointer;
+      }
+      .option label strong {
+        display: block;
+        color: #333;
+        margin-bottom: 5px;
+      }
+      .option label span {
+        font-size: 0.9em;
+      }
+
+      /* --- Conditional Inputs --- */
+      .conditional-inputs {
+        background: #fafafa;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .conditional-inputs.hidden {
+        display: none;
+      }
+
+      .input-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 8px;
+      }
+      .input-group select,
+      .input-group input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid var(--medium-gray);
+        font-family: "Inter", sans-serif;
+        font-size: 1em;
+      }
+
+      /* --- Results Section --- */
+      .results-container {
+        margin-top: 40px;
+        padding: 25px;
+        background-color: #f7f9ff;
+        border-radius: 12px;
+        border: 1px solid #dbe4ff;
+      }
+      .results-container h3 {
+        text-align: center;
+        color: var(--secondary-color);
+        margin-top: 0;
+        margin-bottom: 25px;
+      }
+      .result-line,
+      .result-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+      }
+      .result-line {
+        border-bottom: 1px solid var(--medium-gray);
+        font-size: 0.95em;
+      }
+      .result-line span,
+      .result-total span {
+        flex-basis: 60%;
+      }
+      .result-line strong,
+      .result-total strong {
+        flex-basis: 40%;
+        text-align: right;
+        color: var(--secondary-color);
+      }
+      .result-total {
+        margin-top: 10px;
+        font-size: 1.4em;
+        font-weight: 700;
+      }
+      .special-note {
+        background-color: var(--success-bg);
+        border: 1px solid var(--success-border);
+        color: #1e6b41;
+        padding: 10px 15px;
+        margin-top: 15px;
+        border-radius: 6px;
+        text-align: center;
+        font-size: 0.9em;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="calculator-container">
+      <h1>Calculateur de Tarifs WeWeb</h1>
+      <p class="subtitle">
+        Construisez votre combinaison tarifaire idéale en quelques clics.
+      </p>
+
+      <div class="billing-toggle">
+        <span id="monthly-label">Mensuel</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="billing-cycle-toggle" />
+          <span class="slider"></span>
+        </label>
+        <span id="annual-label">Annuel (-20% environ)</span>
+      </div>
+
+      <div class="step">
+        <div class="step-header">
+          <div class="step-number">1</div>
+          <h2>Choisissez votre Plan "Builder" (par développeur)</h2>
+        </div>
+        <div id="builder-options" class="options-grid">
+          <div class="option" data-plan="gratuit">
+            <label
+              ><input
+                type="radio"
+                name="builderChoice"
+                value="gratuit"
+              /><strong>Gratuit</strong><span>Pour tester WeWeb</span></label
+            >
+          </div>
+          <div class="option" data-plan="essentiel">
+            <label
+              ><input
+                type="radio"
+                name="builderChoice"
+                value="essentiel"
+              /><strong>Essentiel</strong
+              ><span>Pour les développeurs individuels</span></label
+            >
+          </div>
+          <div class="option" data-plan="pro">
+            <label
+              ><input
+                type="radio"
+                name="builderChoice"
+                value="pro"
+                checked
+              /><strong>Pro</strong
+              ><span>Pour des besoins croissants</span></label
+            >
+          </div>
+          <div class="option" data-plan="partenaire">
+            <label
+              ><input
+                type="radio"
+                name="builderChoice"
+                value="partenaire"
+              /><strong>Partenaire</strong
+              ><span>Pour les agences et freelances</span></label
+            >
+          </div>
+        </div>
+        <div id="builder-conditional-inputs" class="conditional-inputs">
+          <div class="input-group">
+            <label for="ai-tokens">Jetons IA / mois</label>
+            <select id="ai-tokens"></select>
+          </div>
+          <div class="input-group">
+            <label for="seats-count">Nombre de postes</label>
+            <input type="number" id="seats-count" value="1" min="1" />
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-header">
+          <div class="step-number">2</div>
+          <h2>Choisissez votre Plan d'Hébergement (par projet)</h2>
+        </div>
+        <div id="hosting-options" class="options-grid">
+          <div class="option" data-plan="free">
+            <label
+              ><input type="radio" name="hostingChoice" value="free" /><strong
+                >Free</strong
+              ><span>Pour tester votre application</span></label
+            >
+          </div>
+          <div class="option" data-plan="launch">
+            <label
+              ><input
+                type="radio"
+                name="hostingChoice"
+                value="launch"
+                checked
+              /><strong>Launch</strong><span>Parfait pour débuter</span></label
+            >
+          </div>
+          <div class="option" data-plan="grow">
+            <label
+              ><input type="radio" name="hostingChoice" value="grow" /><strong
+                >Grow</strong
+              ><span>Pour développer des applications</span></label
+            >
+          </div>
+          <div class="option" data-plan="scale">
+            <label
+              ><input type="radio" name="hostingChoice" value="scale" /><strong
+                >Scale</strong
+              ><span>Pour les apps en production</span></label
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="results-container">
+        <h3>Votre Devis Estimatif</h3>
+        <div class="result-line">
+          <span>Plan Builder</span>
+          <strong id="builder-plan-result"></strong>
+        </div>
+        <div class="result-line">
+          <span>Hébergement Projet</span>
+          <strong id="hosting-plan-result"></strong>
+        </div>
+        <div id="special-note-container"></div>
+        <div class="result-total">
+          <span>Total / mois</span>
+          <strong id="total-cost-result"></strong>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- JavaScript pour la logique ---
+
+      const pricingData = {
+        annual: {
+          builder: {
+            gratuit: { name: "Gratuit", basePrice: 0 },
+            essentiel: { name: "Essentiel", basePrice: 16 },
+            pro: {
+              name: "Pro",
+              seats: true,
+              tokens: [
+                { amount: 25, price: 42 },
+                { amount: 50, price: 83 },
+                { amount: 75, price: 168 },
+                { amount: 100, price: 167 },
+                { amount: 125, price: 210 },
+                { amount: 150, price: 250 },
+              ],
+            },
+            partenaire: {
+              name: "Partenaire",
+              seats: true,
+              tokens: [
+                { amount: 35, price: 67 },
+                { amount: 70, price: 133 },
+                { amount: 105, price: 200 },
+                { amount: 140, price: 267 },
+                { amount: 175, price: 333 },
+                { amount: 210, price: 400 },
+              ],
+            },
+          },
+          hosting: {
+            free: { name: "Free", price: 0 },
+            launch: { name: "Launch", price: 10 },
+            grow: { name: "Grow", price: 20 },
+            scale: { name: "Scale", price: 83 },
+          },
+        },
+        monthly: {
+          builder: {
+            gratuit: { name: "Gratuit", basePrice: 0 },
+            essentiel: { name: "Essentiel", basePrice: 20 },
+            pro: {
+              name: "Pro",
+              seats: true,
+              tokens: [
+                { amount: 25, price: 50 },
+                { amount: 50, price: 100 },
+                { amount: 75, price: 150 },
+                { amount: 100, price: 200 },
+                { amount: 125, price: 250 },
+                { amount: 150, price: 300 },
+              ],
+            },
+            partenaire: {
+              name: "Partenaire",
+              seats: true,
+              tokens: [
+                { amount: 35, price: 80 },
+                { amount: 70, price: 160 },
+                { amount: 105, price: 240 },
+                { amount: 140, price: 320 },
+                { amount: 175, price: 400 },
+                { amount: 210, price: 480 },
+              ],
+            },
+          },
+          hosting: {
+            free: { name: "Free", price: 0 },
+            launch: { name: "Launch", price: 12 },
+            grow: { name: "Grow", price: 24 },
+            scale: { name: "Scale", price: 100 },
+          },
+        },
+      };
+
+      // --- DOM Elements ---
+      const billingToggle = document.getElementById("billing-cycle-toggle");
+      const builderOptions = document.getElementById("builder-options");
+      const hostingOptions = document.getElementById("hosting-options");
+      const conditionalInputs = document.getElementById(
+        "builder-conditional-inputs"
+      );
+      const aiTokensSelect = document.getElementById("ai-tokens");
+      const seatsInput = document.getElementById("seats-count");
+
+      const resultBuilder = document.getElementById("builder-plan-result");
+      const resultHosting = document.getElementById("hosting-plan-result");
+      const resultTotal = document.getElementById("total-cost-result");
+      const specialNoteContainer = document.getElementById(
+        "special-note-container"
+      );
+
+      // --- Functions ---
+
+      function populateTokenOptions() {
+        const billingCycle = billingToggle.checked ? "annual" : "monthly";
+        const builderPlan = document.querySelector(
+          'input[name="builderChoice"]:checked'
+        ).value;
+
+        const planData = pricingData[billingCycle].builder[builderPlan];
+        aiTokensSelect.innerHTML = "";
+
+        if (planData && planData.tokens) {
+          planData.tokens.forEach((tokenTier) => {
+            const option = document.createElement("option");
+            option.value = tokenTier.price;
+            option.textContent = `${tokenTier.amount} millions de jetons`;
+            aiTokensSelect.appendChild(option);
+          });
+        }
+      }
+
+      function updateUI() {
+        const builderPlan = document.querySelector(
+          'input[name="builderChoice"]:checked'
+        ).value;
+        const planData = pricingData.monthly.builder[builderPlan]; // Use any cycle just to check structure
+
+        document
+          .querySelectorAll("#builder-options .option")
+          .forEach((opt) => opt.classList.remove("selected"));
+        document
+          .querySelector(`#builder-options .option[data-plan="${builderPlan}"]`)
+          .classList.add("selected");
+
+        const hostingPlan = document.querySelector(
+          'input[name="hostingChoice"]:checked'
+        ).value;
+        document
+          .querySelectorAll("#hosting-options .option")
+          .forEach((opt) => opt.classList.remove("selected"));
+        document
+          .querySelector(`#hosting-options .option[data-plan="${hostingPlan}"]`)
+          .classList.add("selected");
+
+        if (planData && planData.seats) {
+          conditionalInputs.classList.remove("hidden");
+          populateTokenOptions();
+        } else {
+          conditionalInputs.classList.add("hidden");
+        }
+
+        calculateAndDisplay();
+      }
+
+      function calculateAndDisplay() {
+        const billingCycle = billingToggle.checked ? "annual" : "monthly";
+        const currentData = pricingData[billingCycle];
+
+        const builderChoice = document.querySelector(
+          'input[name="builderChoice"]:checked'
+        ).value;
+        const hostingChoice = document.querySelector(
+          'input[name="hostingChoice"]:checked'
+        ).value;
+
+        const builderPlanData = currentData.builder[builderChoice];
+        const hostingPlanData = currentData.hosting[hostingChoice];
+
+        let builderCost = 0;
+        let builderText = builderPlanData.name;
+
+        if (builderPlanData.seats) {
+          const seats = parseInt(seatsInput.value) || 1;
+          const tokenPrice = parseFloat(aiTokensSelect.value) || 0;
+          builderCost = tokenPrice * seats;
+          builderText = `${seats} x ${builderPlanData.name} (${tokenPrice}€)`;
+        } else {
+          builderCost = builderPlanData.basePrice;
+          builderText = `${builderPlanData.name} (${builderCost}€)`;
+        }
+
+        let hostingCost = hostingPlanData.price;
+        let hostingText = `${hostingPlanData.name} (${hostingCost}€)`;
+        let specialNote = "";
+
+        // Special case for "Partenaire" plan
+        if (builderChoice === "partenaire" && hostingChoice === "launch") {
+          hostingCost = 0;
+          specialNote = `<div class="special-note">Hébergement "Launch" offert avec le plan Partenaire !</div>`;
+        }
+
+        const totalCost = builderCost + hostingCost;
+
+        // Display results
+        resultBuilder.textContent = builderText;
+        resultHosting.textContent = hostingText;
+        specialNoteContainer.innerHTML = specialNote;
+        resultTotal.textContent = `${totalCost} €`;
+      }
+
+      // --- Event Listeners ---
+      billingToggle.addEventListener("change", updateUI);
+      builderOptions.addEventListener("change", updateUI);
+      hostingOptions.addEventListener("change", updateUI);
+      aiTokensSelect.addEventListener("change", calculateAndDisplay);
+      seatsInput.addEventListener("input", calculateAndDisplay);
+
+      // --- Initial Load ---
+      function initialize() {
+        // Set default selections visually
+        document
+          .querySelector('input[name="builderChoice"][value="pro"]')
+          .closest(".option")
+          .classList.add("selected");
+        document
+          .querySelector('input[name="hostingChoice"][value="launch"]')
+          .closest(".option")
+          .classList.add("selected");
+
+        updateUI();
+      }
+
+      initialize();
+    </script>
+  </body>
+</html>
